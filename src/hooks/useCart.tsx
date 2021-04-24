@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { api } from "../services/api";
 import { Product, Stock } from "../types";
+import { formatPrice } from "../util/format";
 
 interface CartProviderProps {
   children: ReactNode;
@@ -34,7 +35,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       // TODO
       const response = await api.get(`products/${productId}`);
-      const productInfo = response.data;
+      const productInfo: Product = response.data;
 
       const found = cart.find(product => product.id === productId);
 
@@ -53,6 +54,10 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           amount: 1,
         };
         setCart([...cart, newProductInCart]);
+        localStorage.setItem(
+          "@RocketShoes:cart",
+          JSON.stringify([...cart, newProductInCart])
+        );
       }
     } catch {
       // TODO
@@ -63,6 +68,9 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const removeProduct = (productId: number) => {
     try {
       // TODO
+      const newCart = cart.filter(product => product.id !== productId);
+      setCart(newCart);
+      localStorage.setItem("@RocketShoes:cart", JSON.stringify(newCart));
     } catch {
       // TODO
       toast.error("Erro na remoção do produto");
@@ -75,6 +83,17 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   }: UpdateProductAmount) => {
     try {
       // TODO
+      const newCart = cart.map(product => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            amount,
+            subTotal: formatPrice(amount * product.price),
+          };
+        } else return product;
+      });
+      setCart(newCart);
+      localStorage.setItem("@RocketShoes:cart", JSON.stringify(newCart));
     } catch {
       // TODO
       toast.error("Erro na alteração de quantidade do produto");
