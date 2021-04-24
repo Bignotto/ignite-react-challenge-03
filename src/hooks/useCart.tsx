@@ -34,11 +34,26 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       // TODO
       const response = await api.get(`products/${productId}`);
-      setCart([...cart, response.data]);
-      localStorage.setItem(
-        "@RocketShoes:cart",
-        JSON.stringify([...cart, response.data])
-      );
+      const productInfo = response.data;
+
+      const found = cart.find(product => product.id === productId);
+
+      if (found) {
+        const newCart = cart.map(product => {
+          if (product.id === productId) {
+            product.amount++;
+          }
+          return product;
+        });
+        setCart(newCart);
+        localStorage.setItem("@RocketShoes:cart", JSON.stringify(newCart));
+      } else {
+        const newProductInCart = {
+          ...productInfo,
+          amount: 1,
+        };
+        setCart([...cart, newProductInCart]);
+      }
     } catch {
       // TODO
       toast.error("Erro na adição do produto");
